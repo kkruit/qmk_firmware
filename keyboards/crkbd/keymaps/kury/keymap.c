@@ -39,7 +39,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT,    KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                         KC_N,    KC_M, KC_COMM,  KC_DOT, KC_SLSH, KC_RSFT,\
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                          KC_LALT,   LOWER,   RAISE,     KC_SPC,  KC_ENT,  KC_RGUI \
+                                          KC_LALT,   RAISE,   LOWER,     KC_SPC,  KC_ENT,  KC_RGUI \
                                       //`--------------------------'  `--------------------------'
 
   ),
@@ -52,7 +52,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT, KC_LCBR, KC_RCBR, KC_AMPR, KC_UNDS, XXXXXXX,                         KC_0,    KC_1,    KC_2,    KC_3, KC_BSLS, KC_TILD,\
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                          KC_LALT,   LOWER,   RAISE,     KC_SPC,  KC_ENT, KC_RGUI \
+                                          KC_LALT,   RAISE,   LOWER,     KC_SPC,  KC_ENT, KC_RGUI \
                                       //`--------------------------'  `--------------------------'
     ),
 
@@ -64,7 +64,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       KC_LSFT, XXXXXXX, KC_ACL0, KC_ACL1, KC_ACL2, XXXXXXX,                      KC_HOME, KC_PGDN, KC_PGUP,  KC_END, XXXXXXX, XXXXXXX,\
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                          KC_LALT,   LOWER,   RAISE,     KC_SPC,  KC_ENT, KC_RGUI \
+                                          KC_LALT,   RAISE,   LOWER,     KC_SPC,  KC_ENT, KC_RGUI \
                                       //`--------------------------'  `--------------------------'
   ),
 
@@ -76,7 +76,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   //|--------+--------+--------+--------+--------+--------|                    |--------+--------+--------+--------+--------+--------|
       RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, XXXXXXX, XXXXXXX,                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,\
   //|--------+--------+--------+--------+--------+--------+--------|  |--------+--------+--------+--------+--------+--------+--------|
-                                          KC_LALT,   LOWER,   RAISE,     KC_SPC,   RAISE, KC_RGUI \
+                                          KC_LALT,   RAISE,   LOWER,     KC_SPC,   RAISE, KC_RGUI \
                                       //`--------------------------'  `--------------------------'
   )
 };
@@ -333,15 +333,15 @@ static const char PROGMEM upper_1[] = {
 
 #endif
 static bool k_which = true;
-void show_layer(uint16_t keycode) {
+void show_layer(void) {
 #ifdef OLED_DRIVER_ENABLE
-    if(layer_state_is(_LOWER) || keycode == LOWER) {
+    if(layer_state_is(_LOWER)) {
       if(k_which) {
         oled_write_raw_P(lower_0, sizeof(lower_0));
       } else {
         oled_write_raw_P(lower_1, sizeof(lower_1));
       }
-    } else if(layer_state_is(_RAISE) || keycode == RAISE) {
+    } else if(layer_state_is(_RAISE)) {
       if(k_which) {
         oled_write_raw_P(upper_0, sizeof(upper_0));
       } else {
@@ -354,51 +354,36 @@ void show_layer(uint16_t keycode) {
         oled_write_raw_P(base_1, sizeof(base_1));
       }
     }
+    return;
 #endif
 }
 
-//void matrix_render_user(struct CharacterMatrix *matrix) {
-  //if (is_master) {
-    // If you want to change the display of OLED, you need to change here
-    //matrix_write_ln(matrix, read_layer_state());
-    //matrix_write_ln(matrix, read_keylog());
-    //matrix_write_ln(matrix, read_keylogs());
-    //matrix_write_ln(matrix, read_mode_icon(keymap_config.swap_lalt_lgui));
-    //matrix_write_ln(matrix, read_host_led_state());
-    //matrix_write_ln(matrix, read_timelog());
-  //} else {
-    //matrix_write(matrix, read_logo());
-  //}
-//}
+#ifdef OLED_DRIVER_ENABLE
 
-//void matrix_update(struct CharacterMatrix *dest, const struct CharacterMatrix *source) {
-  //if (memcmp(dest->display, source->display, sizeof(dest->display))) {
-    //memcpy(dest->display, source->display, sizeof(dest->display));
-    //dest->dirty = true;
-  //}
-//}
+uint16_t oled_timer;
 
-//void iota_gfx_task_user(void) {
-  //struct CharacterMatrix matrix;
-  //matrix_clear(&matrix);
-  //matrix_render_user(&matrix);
-  //matrix_update(&display, &matrix);
-//}
-//#endifSSD1306OLED
+void oled_task_user(void) {
+  if(timer_elapsed(oled_timer) > 10000) {
+    oled_off();
+    return;
+  }
+  if(is_keyboard_master()) {
+    show_layer();
+  }
+}
+
+#endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   if (record->event.pressed) {
     k_which = !k_which;
-    show_layer(keycode);
+    oled_timer = timer_read();
   }
 
   switch (keycode) {
     case QWERTY:
       if (record->event.pressed) {
         persistent_default_layer_set(1UL<<_QWERTY);
-        show_layer(keycode);
-      } else {
-        show_layer(QWERTY);
       }
       return false;
     case LOWER:
@@ -406,7 +391,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         layer_on(_LOWER);
       } else {
         layer_off(_LOWER);
-        show_layer(QWERTY);
       }
       return false;
     case RAISE:
@@ -414,7 +398,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         layer_on(_RAISE);
       } else {
         layer_off(_RAISE);
-        show_layer(QWERTY);
       }
       return false;
     case ADJUST:
