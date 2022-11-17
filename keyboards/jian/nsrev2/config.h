@@ -19,14 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "config_common.h"
 
-/* USB Device descriptor parameter */
-#define VENDOR_ID       0xC0DE
-#define PRODUCT_ID      0x1337
-#define DEVICE_VER      0x0210
-#define MANUFACTURER    KgOfHedgehogs
-#define PRODUCT         Huma
-#define DESCRIPTION     An ergo keyboard
-
 /* key matrix size */
 // Rows are doubled-up
 #define MATRIX_ROWS 8
@@ -40,6 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 /* Set 0 if debouncing isn't needed */
 #define DEBOUNCE 5
+
+#define QMK_ESC_OUTPUT D3
+#define QMK_ESC_INPUT B1
 
 #define PHYSICAL_LEDS_ENABLE
 
